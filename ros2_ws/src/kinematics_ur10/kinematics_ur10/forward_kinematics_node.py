@@ -2,6 +2,8 @@ import rclpy
 from rclpy.node import Node
 import numpy as np
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Float64MultiArray
+
 
 class ForwardKinematicsNode(Node):
     def __init__(self):
@@ -22,7 +24,7 @@ class ForwardKinematicsNode(Node):
         self.joint_subscriber_ = self.create_subscription(JointState, '/joint_states', self.forward_callback, 10)
         
         #Create Publisher
-        #self.transformations_publisher_ = self.create_publisher()
+        self.transformations_publisher_ = self.create_publisher(Float64MultiArray, '/ur10/transforms', 10)
             
     
     def forward_callback(self, msg):
@@ -30,6 +32,13 @@ class ForwardKinematicsNode(Node):
         
         T_06, T_intermediate = self.forward_kinematics(joints)
         
+        #Publish Transformations to Jacobian
+        transforms_msg = Float64MultiArray()
+        transformations = T_intermediate + [T_06]
+        transforms_msg.data = np.array(transformations).flatten().tolist() #flat the matrix to a array
+        self.transformations_publisher_.publish(transforms_msg)
+        
+        #Print Forward Kinematics
         np.set_printoptions(suppress=True, precision=3)        
         self.get_logger().info(f"T_06:\n{T_06.round(3)}")
     
