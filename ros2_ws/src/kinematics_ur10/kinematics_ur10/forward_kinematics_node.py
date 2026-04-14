@@ -24,6 +24,7 @@ class ForwardKinematicsNode(Node):
         self.joint_subscriber_ = self.create_subscription(JointState, '/joint_states', self.forward_callback, 10)
         
         #Create Publisher
+        # we create the topic "/ur10/transforms"
         self.transformations_publisher_ = self.create_publisher(Float64MultiArray, '/ur10/transforms', 10)
             
     

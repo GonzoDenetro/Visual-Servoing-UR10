@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "forward_node = kinematics_ur10.forward_kinematics_node:main"
+            "forward_node = kinematics_ur10.forward_kinematics_node:main",
+            "jacobian_node = kinematics_ur10.jacobian_node:main"
         ],
     },
 )
