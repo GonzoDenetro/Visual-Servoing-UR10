@@ -1,0 +1,85 @@
+# =========================
+# ROS2 workspace
+# =========================
+build/
+install/
+log/
+src/**/build/
+src/**/install/
+src/**/log/
+
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+
+# Colcon
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# =========================
+# Python
+# =========================
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+
+__pycache__/
+*.pyc
+*.pyo
+
+# ROS Python cache
+*.pyc
+*.pkl
+
+# =========================
+# C++ / ROS packages
+# =========================
+*.o
+*.so
+*.a
+*.d
+*.obj
+*.lib
+*.dll
+*.exe
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+ament_cmake_core/
+ament_cmake_environment_hooks/
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Sistema operativo
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# ROS tooling
+# =========================
+.ros/
+rosbag2_*
+*.db3
+*.bag
