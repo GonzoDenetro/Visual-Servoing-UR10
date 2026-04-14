@@ -8,9 +8,13 @@ class JacobianNode(Node):
     def __init__(self):
         super().__init__("Jacobian")
         self.jacobian = 0
+        
         #Create Subscriber
         # we create the "/ur10/transforms"
-        self.create_subscription(Float64MultiArray, '/ur10/transforms', self.jacobian_callback, 10)
+        self.transforms_subscriber_ = self.create_subscription(Float64MultiArray, '/ur10/transforms', self.jacobian_callback, 10)
+        
+        #Create Publisher
+        self.jacobian_publisher_ = self.create_publisher(Float64MultiArray, '/ur10/jacobian', 10)
     
     def jacobian_callback(self, msg):
         matrix = np.array(msg.data)
@@ -23,6 +27,14 @@ class JacobianNode(Node):
         #Get Jacobian
         self.jacobian = self.get_jacobian(T_intermediate, T_06)
         
+        #Publish Jacobian
+        J_msg = Float64MultiArray()
+        J_msg.data = self.jacobian.flatten().tolist()
+        self.jacobian_publisher_.publish(J_msg)
+        
+        #Print Jacobian
+        np.set_printoptions(suppress=True, precision=3)
+        self.get_logger().info(f"J:\n{self.jacobian.round(3)}")
         
     def get_jacobian(self, transformations, T_b_ee):
         identity = np.eye(4)

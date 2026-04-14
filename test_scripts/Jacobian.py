@@ -1,5 +1,5 @@
 import numpy as np
-from test_scripts.ForwardKinematics import *
+from ForwardKinematics import *
 
 #Only for Revolute Joints
 def get_Jacobian(tranformations, T_b_ee):
@@ -35,4 +35,6 @@ link_lengths = [-0.613, -0.572, 0.181, 0.174, 0.120, 0.117]
 T_b_ee, transformations = forwardKinematics(joint_angles, link_lengths)
 
 J = get_Jacobian(transformations, T_b_ee=T_b_ee)
-print(J)
+
+np.set_printoptions(suppress=True, precision=3)
+print(f"K:\n{J.round(3)}")
