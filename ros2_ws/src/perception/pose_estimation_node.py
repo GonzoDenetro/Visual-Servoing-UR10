@@ -44,7 +44,6 @@ class PoseEstimationNode(Node):
         self.D_matrix = np.zeros((5, 1), dtype=np.float64)
         #Bridge for OpenCV and ROS2
         self.bridge = CvBridge()
-        
 
 
     def pose_callback(self, msg):
@@ -72,6 +71,20 @@ class PoseEstimationNode(Node):
                 self.D_matrix,
                 flags=cv.SOLVEPNP_IPPE_SQUARE  # More precision for plane markers
             )         
+            
+            
+            
+            if success:
+                
+                #The rotation vector comes in the axis_angle representatio, we use Rodrigues formula 
+                # to pass it to Rotation matrix
+                R = cv.Rodrigues(rotation_vector)
+                T = np.eye(4)
+                T[:3, :3] = R
+                T[:3, 3] = translation_vector.flatten()
+                
+                #To publish the pose to the control law, the type of message is PoseStamped,
+                # the orientation in PoseStamped is represented in quaternions, we transform it
         
     
     def camera_info_callback(self, msg):
@@ -84,6 +97,9 @@ class PoseEstimationNode(Node):
         self._user_camera_info = True
 
         self.get_logger().info("Intrinsic Matrix Ready")
+        
+    def matrix_to_PoseStamped(self, matrix):
+        pass
         
     
 
