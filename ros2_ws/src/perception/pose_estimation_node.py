@@ -108,36 +108,45 @@ class PoseEstimationNode(Node):
         pose_stamped_msg.pose.position.y = matrix[2, 3]
         
         #Orientation
+        quaternions = self.rotation_to_quaternion(matrix)
+        pose_stamped_msg.pose.orientation.x = quaternions[1]
+        pose_stamped_msg.pose.orientation.y = quaternions[2]
+        pose_stamped_msg.pose.orientation.z = quaternions[3]
+        pose_stamped_msg.pose.orientation.w = quaternions[0] 
         
     def rotation_to_quaternion(self, matrix):
         R = matrix[:3, :3] #3x3
         trace = R[0,0] + R[1,1] + R[2,2] #Sum of the diagonal elements of the matrix 
         
         if trace > 0:
-            q_0 = 1.0/4.0 * np.sqrt(1+trace)
-            q_1 = (R[2, 1] - R[1, 2]) / (2.0*np.sqrt(1+trace))
-            q_2 = (R[0, 2] - R[2, 0]) / (2.0*np.sqrt(1+trace))
-            q_3 = (R[1, 0] - R[0, 1]) / (2.0*np.sqrt(1+trace))
+            s = 2.0 * np.sqrt(1+trace)
+            q_0 = 0.25 * s 
+            q_1 = (R[2, 1] - R[1, 2]) / s
+            q_2 = (R[0, 2] - R[2, 0]) / s
+            q_3 = (R[1, 0] - R[0, 1]) / s
             
-        elif trace == 0 and  R[0, 0] > R[1, 1] and R[0,0] > R[2, 2]:
-            q_0 = (R[2, 1] - R[1, 2])/(2.0*np.sqrt(1+trace))
-            q_1 = 1.0/4.0 * np.sqrt(1+trace)
-            q_2 = (R[1, 0] - R[0, 1]) / (2*np.sqrt(1+trace))
-            q_3 = (R[0, 2] - R[2, 0]) / (2*np.sqrt(1+trace))
+        elif R[0, 0] > R[1, 1] and R[0,0] > R[2, 2]:
+            s = 2.0 * np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2])
+            q_0 = (R[2, 1] - R[1, 2]) / s
+            q_1 = 0.25 * s
+            q_2 = (R[1, 0] + R[0, 1]) / s
+            q_3 = (R[0, 2] + R[2, 0]) / s
         
-        elif trace == 0 and R[1, 1] > R[2, 2]:
-            q_0 = (R[0, 2] - R[2, 0])/(2.0*np.sqrt(1+trace))
-            q_1 = (R[0, 1] + R[1, 0])/(2.0*np.sqrt(1+trace))
-            q_2 = 1.0/4.0 * np.sqrt(1+trace)
-            q_3 = (R[1, 2] + R[2, 1]) / (2*np.sqrt(1+trace))
+        elif R[1, 1] > R[2, 2]:
+            s = 2.0 * np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2])
+            q_0 = (R[0, 2] - R[2, 0]) / s
+            q_1 = (R[0, 1] + R[1, 0]) / s
+            q_2 = 0.25 * s
+            q_3 = (R[1, 2] + R[2, 1]) / s
             
         else:
-            q_0 = (R[1, 0] - R[0, 1])/(2.0*np.sqrt(1+trace))
-            q_1 = (R[0, 2] + R[2, 0])/(2.0*np.sqrt(1+trace))
-            q_2 = (R[1, 2] + R[2, 1]) / (2*np.sqrt(1+trace))
-            q_3 = 1.0/4.0 * np.sqrt(1+trace)
+            s = 2.0 * np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1])
+            q_0 = (R[1, 0] - R[0, 1]) / s
+            q_1 = (R[0, 2] + R[2, 0]) / s
+            q_2 = (R[1, 2] + R[2, 1]) / s
+            q_3 = 0.25 * s
     
-        return q_0, q_1, q_2, q_3, 
+        return q_0, q_1, q_2, q_3 
 
 def main(args=None):
     rclpy.init(args=args) #Initialze Communiation
