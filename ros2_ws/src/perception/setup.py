@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            "pose_node = perception.pose_estimation_node:main"
         ],
     },
 )

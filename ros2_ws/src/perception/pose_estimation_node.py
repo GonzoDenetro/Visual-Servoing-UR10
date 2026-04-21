@@ -83,6 +83,10 @@ class PoseEstimationNode(Node):
                 #The rotation vector comes in the axis_angle representatio, we use Rodrigues formula 
                 # to pass it to Rotation matrix
                 R, _ = cv.Rodrigues(rotation_vector)
+                
+                np.set_printoptions(suppress=True, precision=3)
+                self.get_logger().info(f"Rotation Matrix:\n{R.round(3)}")
+                
                 T = np.eye(4)
                 T[:3, :3] = R
                 T[:3, 3] = translation_vector.flatten()
@@ -157,7 +161,9 @@ class PoseEstimationNode(Node):
             q_1 = (R[0, 2] + R[2, 0]) / s
             q_2 = (R[1, 2] + R[2, 1]) / s
             q_3 = 0.25 * s
-    
+
+        self.get_logger().info(f"Quaternion:\n w:{q_0}, x:{q_1}, y:{q_2}, z:{q_3}")
+        
         return q_0, q_1, q_2, q_3 
 
 def main(args=None):
