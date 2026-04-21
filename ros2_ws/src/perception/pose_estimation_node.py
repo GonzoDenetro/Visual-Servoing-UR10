@@ -20,12 +20,15 @@ class PoseEstimationNode(Node):
         self.cam_info_subscriber = self.create_subscription(CameraInfo, '/wrist_camera/camera_info', self.camera_info_callback, 10)
         
         #Create Pose Publisher
-        self.pose_publisher = self.create_publisher()
+        self.pose_publisher = self.create_publisher(PoseStamped, '/ur10/aruco_pose', 10)
+        
+        #Detection detected Publisher
+        self.detected_publisher = self.create_publisher(Bool, '/ur10/aruco_detected', 10)
         
         #Aruco Detector Configuration
-        self.aruco_dict = cv.aruco.getPredifinedDictrionary(cv.aruco.DICT_6X6_250) #Dictionary of Aruco markers of 6x6 bits
-        self.parameters = cv.aruco.DetectorParams()
-        self.detector = cv.aruco.ArucoDetector(self.aruco_dict)
+        self.aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_6X6_250) #Dictionary of Aruco markers of 6x6 bits
+        self.parameters = cv.aruco.DetectorParameters()
+        self.detector = cv.aruco.ArucoDetector(self.aruco_dict, self.parameters)
         self.marker_length = 0.0104
         
         self.marker_3d_points = np.array([
@@ -52,7 +55,7 @@ class PoseEstimationNode(Node):
         img_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         
         #Detect Aruco Markers (returns the coordinates of the corners and the ids)
-        corners, ids, _ = self.detector.detectMakers(img_gray)
+        corners, ids, _ = self.detector.detectMarkers(img_gray)
         detected_msg = Bool()
         
         #Markers not detected
@@ -64,7 +67,7 @@ class PoseEstimationNode(Node):
         for marker_corners in corners:
             image_points = marker_corners[0].astype(np.float64)
             
-            #Solve PNP (return: succces, rotation vector and translation vector)
+            #Solve PNP (return: succces, rotation vector and translation vector) #Inthe camera reference system
             success, rotation_vector, translation_vector = cv.solvePnP(
                 self.marker_3d_points,
                 image_points,
@@ -79,14 +82,19 @@ class PoseEstimationNode(Node):
                 
                 #The rotation vector comes in the axis_angle representatio, we use Rodrigues formula 
                 # to pass it to Rotation matrix
-                R = cv.Rodrigues(rotation_vector)
+                R, _ = cv.Rodrigues(rotation_vector)
                 T = np.eye(4)
                 T[:3, :3] = R
                 T[:3, 3] = translation_vector.flatten()
                 
                 #To publish the pose to the control law, the type of message is PoseStamped,
                 # the orientation in PoseStamped is represented in quaternions, we transform it
-        
+                image_time_stamp = msg.header.stamp
+                pose_msg = self.matrix_to_PoseStamped(T, image_time_stamp, frame_id='wrist_camera_link')
+                self.pose_publisher.publish(pose_msg)
+                
+                detected_msg.data = True
+                self.detected_publisher.publish(detected_msg)
     
     def camera_info_callback(self, msg):
         if self._user_camera_info:
@@ -99,13 +107,15 @@ class PoseEstimationNode(Node):
 
         self.get_logger().info("Intrinsic Matrix Ready")
         
-    def matrix_to_PoseStamped(self, matrix):
+    def matrix_to_PoseStamped(self, matrix, time_stamp, frame_id):
         pose_stamped_msg = PoseStamped()
+        pose_stamped_msg.header.stamp = time_stamp
+        pose_stamped_msg.header.frame_id = frame_id #Coordinates reference system
         
         #Position
         pose_stamped_msg.pose.position.x = matrix[0, 3]
         pose_stamped_msg.pose.position.y = matrix[1, 3]
-        pose_stamped_msg.pose.position.y = matrix[2, 3]
+        pose_stamped_msg.pose.position.z = matrix[2, 3]
         
         #Orientation
         quaternions = self.rotation_to_quaternion(matrix)
@@ -113,6 +123,8 @@ class PoseEstimationNode(Node):
         pose_stamped_msg.pose.orientation.y = quaternions[2]
         pose_stamped_msg.pose.orientation.z = quaternions[3]
         pose_stamped_msg.pose.orientation.w = quaternions[0] 
+        
+        return pose_stamped_msg
         
     def rotation_to_quaternion(self, matrix):
         R = matrix[:3, :3] #3x3
