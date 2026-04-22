@@ -7,7 +7,7 @@ import cv2 as cv
 
 class ImagePublusher(Node):
     def __init__(self):
-        self.super().__init__('Image_publihser')
+        super().__init__('Image_publihser')
         self.path = '/home/gonzcode/Robotics/VisualServoing/test_scripts/Assets/Aruco_test.jpg'
         
         # Create Image Publisher
@@ -32,7 +32,7 @@ class ImagePublusher(Node):
         img_msg.header.stamp = self.get_clock().now().to_msg()
         img_msg.header.frame_id = 'wrist_camera_link'
         
-        self.image_callback.publish(img_msg)
+        self.image_publisher_.publish(img_msg)
         self.get_logger().info('Image Published')
 
 def main(args=None):

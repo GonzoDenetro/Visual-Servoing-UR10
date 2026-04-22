@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "pose_node = perception.pose_estimation_node:main"
+            "pose_node = perception.pose_estimation_node:main",
+            "img_publisher_test = perception.image_publisher_test_node:main"
         ],
     },
 )

@@ -17,7 +17,7 @@ class PoseEstimationNode(Node):
         self.img_subscriber = self.create_subscription(Image, '/wrist_camera/image_raw', self.pose_callback, 10)
         
         #Create a Subscriber for the camera info (to get intrinsic matrix)
-        self.cam_info_subscriber = self.create_subscription(CameraInfo, '/wrist_camera/camera_info', self.camera_info_callback, 10)
+        #self.cam_info_subscriber = self.create_subscription(CameraInfo, '/wrist_camera/camera_info', self.camera_info_callback, 10)
         
         #Create Pose Publisher
         self.pose_publisher = self.create_publisher(PoseStamped, '/ur10/aruco_pose', 10)
@@ -27,8 +27,9 @@ class PoseEstimationNode(Node):
         
         #Aruco Detector Configuration
         self.aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_6X6_250) #Dictionary of Aruco markers of 6x6 bits
-        self.parameters = cv.aruco.DetectorParameters()
-        self.detector = cv.aruco.ArucoDetector(self.aruco_dict, self.parameters)
+        #self.parameters = cv.aruco.DetectorParameters() #for new OpenCV API
+        self.parameters = cv.aruco.DetectorParameters_create()
+        #self.detector = cv.aruco.ArucoDetector(self.aruco_dict, self.parameters)
         self.marker_length = 0.0104
         
         self.marker_3d_points = np.array([
@@ -46,7 +47,7 @@ class PoseEstimationNode(Node):
             [  0.0,   0.0,   1.0]
         ], dtype=np.float64)
         #self.D_matrix = np.zeros((5, 1), dtype=np.float64)
-        self.D_matrix = np.array([[ 11.303 -364.221   -0.038   -0.357   -6.173]])
+        self.D_matrix = np.array([[11.303, -364.221, -0.038, -0.357, -6.173]])
         #Bridge for OpenCV and ROS2
         self.bridge = CvBridge()
 
@@ -56,7 +57,12 @@ class PoseEstimationNode(Node):
         img_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         
         #Detect Aruco Markers (returns the coordinates of the corners and the ids)
-        corners, ids, _ = self.detector.detectMarkers(img_gray)
+        #corners, ids, _ = self.detector.detectMarkers(img_gray) # new API of OpenCV
+        corners, ids, _ = cv.aruco.detectMarkers(
+            img_gray,
+            self.aruco_dict,
+            parameters=self.parameters
+        )
         detected_msg = Bool()
         
         #Markers not detected
