@@ -83,3 +83,9 @@ Thumbs.db
 rosbag2_*
 *.db3
 *.bag
+
+# Others
+Assets/
+*.jpg
+*.jpeg
+*.png

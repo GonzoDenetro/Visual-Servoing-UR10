@@ -41,11 +41,12 @@ class PoseEstimationNode(Node):
         #Intrinsic Matrix
         self._user_camera_info = False
         self.k_matrix = np.array([
-            [600.0,   0.0, 320.0],
-            [  0.0, 600.0, 240.0],
+            [3149.439,   0.0, 227.376],
+            [  0.0, 4079.515, 210.289],
             [  0.0,   0.0,   1.0]
         ], dtype=np.float64)
-        self.D_matrix = np.zeros((5, 1), dtype=np.float64)
+        #self.D_matrix = np.zeros((5, 1), dtype=np.float64)
+        self.D_matrix = np.array([[ 11.303 -364.221   -0.038   -0.357   -6.173]])
         #Bridge for OpenCV and ROS2
         self.bridge = CvBridge()
 
