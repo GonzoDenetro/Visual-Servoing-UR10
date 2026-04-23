@@ -14,6 +14,7 @@ class ControlLaw(Node):
         
         # Control Parameters
         self.alpha = 0.1
+        self.error_tol = 1e-3
         
         #Desire Pose
         self.T_desire = np.array([
@@ -79,7 +80,25 @@ class ControlLaw(Node):
         
         # 1.5.- ------ Convert rotation to axis_angle
         theta_u = self.rotation_to_axis_angle(R)
-                
+        
+        # 2.- --------- Get Error
+        error = np.concatenate(t_c_star_c, theta_u)
+        error_norm = np.linalg.norm(error)        
+        
+        #3. ---------- Control Law
+        if error_norm < self.error_tol:
+            self.get_logger().info(f'Convergence reached. Error < Tolerance')
+            #Publish Velocities
+            return
+
+        # Control Law for PBVS
+        #   vc = -λ · R · c*_tc ----> Linear Velocity
+        #   ωc = -λ · θu  -----> Angular Velocity
+
+        vc = -self.alpha * R * t_c_star_c
+        vw = -self.alpha * theta_u
+        
+            
     
     def quaternion_to_rotation(self, quaternion):
         #COnvert quaternions to a rotation matrix of 3x3
@@ -110,7 +129,7 @@ class ControlLaw(Node):
         
         
 def main(args=None):
-    rclpy.init() #Initialze Communication
+    rclpy.init(args=args) #Initialze Communication
     
     #Event Loop Node
     node = ControlLaw()
