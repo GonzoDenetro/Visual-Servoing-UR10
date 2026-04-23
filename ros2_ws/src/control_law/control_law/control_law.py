@@ -73,7 +73,12 @@ class ControlLaw(Node):
         # T_c*_c: Is the transformation of the actual camara pose view from the desire camera pose
         # T_c*_c is the equivalent to e = s* - s
         
-        T_c*_c = self.T_desire @ np.linalg.inv(self.T_current_pose)
+        T_c_star_c = self.T_desire @ np.linalg.inv(self.T_current_pose)
+        R = T_c_star_c[:3, :3] #Rotation part: c --> c*
+        t_c_star_c = T_c_star_c[:3, 3] # translation part: c --> c*
+        
+        # 1.5.- ------ Convert rotation to axis_angle
+        
     
     def quaternion_to_rotation(self, quaternion):
         #COnvert quaternions to a rotation matrix of 3x3
@@ -84,6 +89,12 @@ class ControlLaw(Node):
             [2.0*(q1*q3 - q0*q2), 2.0*(q2*q3 + q0*q1), (2.0*(q0**2 + q3**2))-1]
         ]
         return R
+
+    def rotation_to_axis_angle(self, R):
+        trace = R[0, 0] + R[1,1] + R[2, 2]
+        angle = np.arcos((trace - 1.0) / 2.0)
+        
+        axis = (1 / (2.0 * np.sin(angle))) * (R - R.T)
         
         
 def main(args=None):
