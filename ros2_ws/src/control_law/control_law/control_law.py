@@ -78,7 +78,8 @@ class ControlLaw(Node):
         t_c_star_c = T_c_star_c[:3, 3] # translation part: c --> c*
         
         # 1.5.- ------ Convert rotation to axis_angle
-        
+        theta_u = self.rotation_to_axis_angle(R)
+                
     
     def quaternion_to_rotation(self, quaternion):
         #COnvert quaternions to a rotation matrix of 3x3
@@ -92,9 +93,20 @@ class ControlLaw(Node):
 
     def rotation_to_axis_angle(self, R):
         trace = R[0, 0] + R[1,1] + R[2, 2]
-        angle = np.arcos((trace - 1.0) / 2.0)
+        cos_theta = np.clip((trace - 1.0) / 2.0, -1.0, 1.0) #Limit values between -1 and 1. To avoid errors
+        angle = np.arcos(cos_theta)
         
-        axis = (1 / (2.0 * np.sin(angle))) * (R - R.T)
+        if angle < 1e-6:
+            #No rotation
+            return np.zeros(3)
+
+        u = np.array([
+            R[2, 1] - R[1, 2],
+            R[0, 2] - R[2, 0],
+            R[1, 0] - R[0, 1]
+        ]) / (2.0 * np.sin(angle))
+        
+        return angle*u
         
         
 def main(args=None):
