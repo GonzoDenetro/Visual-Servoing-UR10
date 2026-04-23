@@ -12,6 +12,10 @@ class ControlLaw(Node):
         self.jacobian = None
         self.marker_detected = False
         
+        # Control Parameters
+        self.alpha = 0.1
+        
+        #Detected Pose
         #Subscribers
         self.jacobian_subscriber_ = self.create_subscription(Float64MultiArray, '/ur10/jacobian', self.jacobian_callback, 10)
         self.pose_subscriber_ = self.create_subscription(PoseStamped, '/ur10/aruco_pose', self.pose_callback, 10)
@@ -19,6 +23,9 @@ class ControlLaw(Node):
         
         #Joint Velocitiies Publisher
         
+        
+        #Timer 100Hz
+        self.timer = self.create_timer(0.1, self.control_loop)
     
     def  jacobian_callback(self, msg):
         data = np.array(msg.data)
@@ -31,14 +38,40 @@ class ControlLaw(Node):
         
     
     def pose_callback(self, msg):
-        pass
+        
+        #Pose
+        p = msg.pose.position
+        q = msg.pose.orientation
+        
+        #Rotation Martix
+        R = self.quaternion_to_rotation(q)
+        
+        #Transformation Matrix
+        T = np.eye(4)
+        T[:3, :3] = R
+        T[:3, 3] = [p.x, p.y, p.z]
+        
+        self.T_current_pose = T
     
     
     def detected_callback(self, msg):
         self.marker_detected = msg.data
     
     
-
+    def control_loop(self):
+        pass
+    
+    def quaternion_to_rotation(self, quaternion):
+        #COnvert quaternions to a rotation matrix of 3x3
+        q0, q1, q2, q3 = quaternion
+        R = [
+            [(2.0*(q0**2 + q1**2))-1, 2.0*(q1*q2 - q0*q3), 2.0*(q1*q3 + q0*q2)],
+            [2.0*(q1*q2 + q0*q3), (2.0*(q0**2 + q2**2))-1, 2.0*(q1*q3 - q0*q1)],
+            [2.0*(q1*q3 - q0*q2), 2.0*(q2*q3 + q0*q1), (2.0*(q0**2 + q3**2))-1]
+        ]
+        return R
+        
+        
 def main(args=None):
     rclpy.init() #Initialze Communication
     
