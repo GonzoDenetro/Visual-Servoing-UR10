@@ -97,7 +97,15 @@ class ControlLaw(Node):
 
         vc = -self.alpha * R * t_c_star_c
         vw = -self.alpha * theta_u
+        v_spatial = np.concatenate([vw, vw])
         
+        #Jacobian Pseudo Inver Moore-Penrose
+        j_pinv = np.linalg.pinv(self.jacobian)
+
+        #Joint velocities
+        q_dot = j_pinv @ v_spatial
+        
+        self.get_logger().info(f'Joint Velocities: \n {str(q_dot)}')        
             
     
     def quaternion_to_rotation(self, quaternion):
