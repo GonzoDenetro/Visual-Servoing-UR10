@@ -15,7 +15,14 @@ class ControlLaw(Node):
         # Control Parameters
         self.alpha = 0.1
         
-        #Detected Pose
+        #Desire Pose
+        self.T_desire = np.array([
+            [1.0, 0.0, 0.0,  0.0 ],
+            [0.0, 1.0, 0.0,  0.0 ],
+            [0.0, 0.0, 1.0,  0.30],   # 30 cm frente a la cámara
+            [0.0, 0.0, 0.0,  1.0 ],
+        ], dtype=np.float64)
+        
         #Subscribers
         self.jacobian_subscriber_ = self.create_subscription(Float64MultiArray, '/ur10/jacobian', self.jacobian_callback, 10)
         self.pose_subscriber_ = self.create_subscription(PoseStamped, '/ur10/aruco_pose', self.pose_callback, 10)
@@ -38,7 +45,6 @@ class ControlLaw(Node):
         
     
     def pose_callback(self, msg):
-        
         #Pose
         p = msg.pose.position
         q = msg.pose.orientation
@@ -59,7 +65,15 @@ class ControlLaw(Node):
     
     
     def control_loop(self):
-        pass
+        # In the control loop we are going to get set the joint velocities based on the error 
+        # of the current pose and desire pose.
+        
+        # 1.-    -----Get diference between desire pose and current pose
+        # 
+        # T_c*_c: Is the transformation of the actual camara pose view from the desire camera pose
+        # T_c*_c is the equivalent to e = s* - s
+        
+        T_c*_c = self.T_desire @ np.linalg.inv(self.T_current_pose)
     
     def quaternion_to_rotation(self, quaternion):
         #COnvert quaternions to a rotation matrix of 3x3
