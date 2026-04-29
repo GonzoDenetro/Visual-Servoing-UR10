@@ -9,7 +9,7 @@ import numpy as np
 class ControlLaw(Node):
     def __init__(self):
         super().__init__('Control_law_node')
-        self.T_current_pose = None
+        self.T_current_pose = np.eye(4)
         self.jacobian = None
         self.marker_detected = False
         
@@ -83,7 +83,7 @@ class ControlLaw(Node):
         theta_u = self.rotation_to_axis_angle(R)
         
         # 2.- --------- Get Error
-        error = np.concatenate(t_c_star_c, theta_u)
+        error = np.concatenate((t_c_star_c, theta_u))
         error_norm = np.linalg.norm(error)        
         
         #3. ---------- Control Law
@@ -96,7 +96,7 @@ class ControlLaw(Node):
         #   vc = -λ · R · c*_tc ----> Linear Velocity
         #   ωc = -λ · θu  -----> Angular Velocity
 
-        vc = -self.alpha * R * t_c_star_c
+        vc = -self.alpha * (R @ t_c_star_c)
         vw = -self.alpha * theta_u
         v_spatial = np.concatenate([vc, vw])
         
@@ -111,7 +111,11 @@ class ControlLaw(Node):
     
     def quaternion_to_rotation(self, quaternion):
         #COnvert quaternions to a rotation matrix of 3x3
-        q0, q1, q2, q3 = quaternion
+        q0 = quaternion.w
+        q1 = quaternion.x
+        q2 = quaternion.y
+        q3 = quaternion.z
+        
         R = [
             [(2.0*(q0**2 + q1**2))-1, 2.0*(q1*q2 - q0*q3), 2.0*(q1*q3 + q0*q2)],
             [2.0*(q1*q2 + q0*q3), (2.0*(q0**2 + q2**2))-1, 2.0*(q1*q3 - q0*q1)],
@@ -122,7 +126,7 @@ class ControlLaw(Node):
     def rotation_to_axis_angle(self, R):
         trace = R[0, 0] + R[1,1] + R[2, 2]
         cos_theta = np.clip((trace - 1.0) / 2.0, -1.0, 1.0) #Limit values between -1 and 1. To avoid errors
-        angle = np.arcos(cos_theta)
+        angle = np.arccos(cos_theta)
         
         if angle < 1e-6:
             #No rotation
