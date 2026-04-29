@@ -9,7 +9,7 @@ import numpy as np
 class ControlLaw(Node):
     def __init__(self):
         super().__init__('Control_law_node')
-        self.T_current_pose = np.eye(4)
+        self.T_current_pose = None
         self.jacobian = None
         self.marker_detected = False
         
@@ -34,10 +34,11 @@ class ControlLaw(Node):
         
         
         #Timer 100Hz
-        self.timer = self.create_timer(0.1, self.control_loop)
+        self.timer = self.create_timer(0.01, self.control_loop)
     
     def  jacobian_callback(self, msg):
         data = np.array(msg.data)
+        self.get_logger().info(str(data.shape))
         
         if data.shape[0] != 36:
             self.get_logger().info('Jacobians comes in incorrect size')
@@ -70,6 +71,9 @@ class ControlLaw(Node):
         # In the control loop we are going to get set the joint velocities based on the error 
         # of the current pose and desire pose.
         
+        if self.T_current_pose is None or self.jacobian is None:
+            return
+                
         # 1.-    -----Get diference between desire pose and current pose
         # 
         # T_c*_c: Is the transformation of the actual camara pose view from the desire camera pose
@@ -96,7 +100,7 @@ class ControlLaw(Node):
         #   vc = -λ · R · c*_tc ----> Linear Velocity
         #   ωc = -λ · θu  -----> Angular Velocity
 
-        vc = -self.alpha * (R @ t_c_star_c)
+        vc = -self.alpha * (R.T @ t_c_star_c)
         vw = -self.alpha * theta_u
         v_spatial = np.concatenate([vc, vw])
         
@@ -121,7 +125,7 @@ class ControlLaw(Node):
             [2.0*(q1*q2 + q0*q3), (2.0*(q0**2 + q2**2))-1, 2.0*(q1*q3 - q0*q1)],
             [2.0*(q1*q3 - q0*q2), 2.0*(q2*q3 + q0*q1), (2.0*(q0**2 + q3**2))-1]
         ]
-        return R
+        return np.array(R, dtype=np.float64)
 
     def rotation_to_axis_angle(self, R):
         trace = R[0, 0] + R[1,1] + R[2, 2]

@@ -30,6 +30,8 @@ class JacobianNode(Node):
         #Publish Jacobian
         J_msg = Float64MultiArray()
         J_msg.data = self.jacobian.flatten().tolist()
+        self.get_logger().info(f'J shape: {str(len(J_msg.data))}')
+        self.get_logger().info(f'J send: {str(J_msg.data)}')
         self.jacobian_publisher_.publish(J_msg)
         
         #Print Jacobian
@@ -40,7 +42,7 @@ class JacobianNode(Node):
         identity = np.eye(4)
         T_list = [identity] + list(transformations)
         z_hat = np.array([0, 0, 1]).reshape(-1, 1)
-        n_joints = len(T_list) - 1
+        n_joints = len(T_list) 
         jacobian = np.zeros((6, n_joints))
         
         for i in range(n_joints): 
