@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            "control_node = control_law.control_law:main"
         ],
     },
 )

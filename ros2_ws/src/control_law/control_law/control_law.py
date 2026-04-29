@@ -8,6 +8,7 @@ import numpy as np
 
 class ControlLaw(Node):
     def __init__(self):
+        super().__init__('Control_law_node')
         self.T_current_pose = None
         self.jacobian = None
         self.marker_detected = False
@@ -20,7 +21,7 @@ class ControlLaw(Node):
         self.T_desire = np.array([
             [1.0, 0.0, 0.0,  0.0 ],
             [0.0, 1.0, 0.0,  0.0 ],
-            [0.0, 0.0, 1.0,  0.30],   # 30 cm frente a la cámara
+            [0.0, 0.0, 1.0,  0.30],   # 30 cm of the camera
             [0.0, 0.0, 0.0,  1.0 ],
         ], dtype=np.float64)
         
@@ -97,7 +98,7 @@ class ControlLaw(Node):
 
         vc = -self.alpha * R * t_c_star_c
         vw = -self.alpha * theta_u
-        v_spatial = np.concatenate([vw, vw])
+        v_spatial = np.concatenate([vc, vw])
         
         #Jacobian Pseudo Inver Moore-Penrose
         j_pinv = np.linalg.pinv(self.jacobian)
