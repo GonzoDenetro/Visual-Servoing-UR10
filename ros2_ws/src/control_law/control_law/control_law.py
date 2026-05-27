@@ -31,7 +31,7 @@ class ControlLaw(Node):
         self.detected_subscriber = self.create_subscription(Bool, '/ur10/aruco_detected', self.detected_callback, 10)
         
         #Joint Velocitiies Publisher
-        
+        self.vel_publisher = self.create_publisher(Float64MultiArray, '/ur10/joint_velocities', 10)        
         
         #Timer 100Hz
         self.timer = self.create_timer(0.01, self.control_loop)
@@ -109,6 +109,9 @@ class ControlLaw(Node):
 
         #Joint velocities
         q_dot = j_pinv @ v_spatial
+        
+        #Publish velocities 
+        self.vel_publisher.publish(q_dot)
         
         self.get_logger().info(f'Joint Velocities: \n {str(q_dot)}')        
             
