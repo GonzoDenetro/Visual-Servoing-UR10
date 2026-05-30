@@ -166,7 +166,7 @@ ros2_ws/src/
 │
 ├── control/                            # PBVS control law
 │   ├── control/
-│   │   └── pbvs_control_node.py        # PBVS control law implementation
+│   │   └── control_law.py        # PBVS control law implementation
 │   ├── package.xml
 │   └── setup.py
 │
